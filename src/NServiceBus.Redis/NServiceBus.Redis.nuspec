@@ -1,11 +1,11 @@
 <?xml version="1.0"?>
 <package >
   <metadata>
-    <id>$id$</id>
-    <version>$version$</version>
-    <title>$title$</title>
-    <authors>$author$</authors>
-    <owners>$author$</owners>
+    <id>NServiceBus.Redis</id>
+    <version>1.0.0</version>
+    <title>NServiceBus.Redis</title>
+    <authors>Fabio Testa</authors>
+    <owners>Fabio Testa</owners>
     <licenseUrl>https://raw.githubusercontent.com/fabtesta/NServiceBus4.Redis/master/LICENSE</licenseUrl>
     <projectUrl>https://github.com/fabtesta/NServiceBus4.Redis</projectUrl>
     <iconUrl>https://redis.io/images/redis-white.png</iconUrl>
