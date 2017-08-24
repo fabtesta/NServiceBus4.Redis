@@ -6,6 +6,13 @@
     <title>$title$</title>
     <authors>$author$</authors>
     <owners>$author$</owners>
+    <licenseUrl>https://raw.githubusercontent.com/fabtesta/NServiceBus4.Redis/master/LICENSE</licenseUrl>
+    <projectUrl>https://github.com/fabtesta/NServiceBus4.Redis</projectUrl>
+    <iconUrl>https://redis.io/images/redis-white.png</iconUrl>
+    <requireLicenseAcceptance>true</requireLicenseAcceptance>
+    <description>NServiceBus 4.4.x Redis Persistence</description>
+    <releaseNotes>v 1.x supports only Timeouts</releaseNotes>
     <copyright>Copyright 2017</copyright>
+    <tags>nservicebus redis</tags>
   </metadata>
 </package>
