@@ -1,10 +1,32 @@
 version: 1.0.{build}
-skip_non_tags: true
+#skip_non_tags: true
 before_build:
+- ps: >-
+  Invoke-WebRequest "https://github.com/MicrosoftArchive/redis/releases/download/win-3.0.504/Redis-x64-3.0.504.zip" -OutFile .\redis-x64-3.0.504.zip;
+
+  $destFolder = "redis-x64-3.0.504";
+  $shell = new-object -com shell.application;
+
+  $zip = $shell.NameSpace("$pwd\redis-x64-3.0.504.zip");
+  if (Test-Path $pwd\$destFolder )
+  {
+     del $pwd\$destFolder -Force -Recurse
+  }
+
+  md ".\redis-x64-3.0.504";
+  foreach($item in $zip.items())
+  {
+    $shell.Namespace("$pwd\redis-x64-3.0.504").copyhere($item);
+  }
+  
+  cd $destFolder
+  .\redis-server.exe --service-install
+  .\redis-server.exe --service-start
+  cd ..
 - cmd: nuget restore src\NServiceBus.Redis.sln
 build:
   project: src\NServiceBus.Redis.sln
-  verbosity: detailed
+  verbosity: normal
 deploy:
   provider: NuGet
   api_key:
