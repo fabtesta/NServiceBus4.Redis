@@ -7,6 +7,7 @@ before_build:
 - cmd: nuget restore src\NServiceBus.Redis.sln
 build:
   project: src\NServiceBus.Redis.sln
+  publish_nuget: true
   verbosity: normal
 deploy:
   provider: NuGet
