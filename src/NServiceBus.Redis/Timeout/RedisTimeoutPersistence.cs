@@ -23,6 +23,9 @@ namespace NServiceBus.Redis.Timeout
             _endpointName = endpointName;
             _redisClientsManager = redisClientsManager;
             _defaultPollingTimeout = defaultPollingTimeout;
+            
+            Logger.InfoFormat("RedisTimeoutPersistence instance endpointName {0} defaultPollingTimeout {1} redisClientsManager {2}", endpointName,  defaultPollingTimeout, redisClientsManager.GetType().FullName);
+            
         }
 
         public List<Tuple<string, DateTime>> GetNextChunk(DateTime startSlice, out DateTime nextTimeToRunQuery)

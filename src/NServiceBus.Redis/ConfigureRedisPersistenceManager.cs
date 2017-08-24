@@ -1,4 +1,6 @@
 ﻿using System.Configuration;
+using System.Globalization;
+using NServiceBus.Logging;
 using NServiceBus.Redis.Timeout;
 using NServiceBus.Timeout.Core;
 using ServiceStack;
@@ -11,8 +13,11 @@ namespace NServiceBus.Redis
         private static readonly object SyncObj = new object();
         private static IRedisClientsManager _redisManager;
         
+        static readonly ILog Logger = LogManager.GetLogger(typeof(ConfigureRedisPersistenceManager));                
+
         public static Configure UseRedisTimeoutPersister(this Configure config, string endpointName, int defaultPollingTimeout = 10)
         {
+            Logger.InfoFormat("ConfigureRedisPersistenceManager UseRedisTimeoutPersister endpointName {0} defaultPollingTimeout {1}", endpointName,  defaultPollingTimeout);
             return config.UseRedisTimeoutPersister(endpointName, GetRedisClientsManager(), defaultPollingTimeout);
         }
         
@@ -21,6 +26,7 @@ namespace NServiceBus.Redis
             var redisTimeoutPersister = new RedisTimeoutPersistence(endpointName, redisClientsManager, defaultPollingTimeout);
             config.Configurer.RegisterSingleton<IPersistTimeouts>(redisTimeoutPersister);
             //config.Configurer.ConfigureComponent<RedisTimeoutPersistence>(DependencyLifecycle.SingleInstance);
+            Logger.InfoFormat("ConfigureRedisPersistenceManager UseRedisTimeoutPersister endpointName {0} defaultPollingTimeout {1} redisClientsManager {2}", endpointName,  defaultPollingTimeout, redisClientsManager.GetType().FullName);
             return config;
         }
         
@@ -31,6 +37,9 @@ namespace NServiceBus.Redis
             var redisConnectionString = ConfigurationManager.AppSettings["NServiceBus/Redis/RedisConnectionString"].Replace(";", "&");
             var redisManager = InitRedisClientManager(clusterName, clusterNodes, redisConnectionString);
 
+            var serviceStackLicense = ConfigurationManager.AppSettings["servicestack:license"] != null ? "found" : "not found (missing servicestack:license key)";
+            Logger.InfoFormat("ConfigureRedisPersistenceManager GetRedisClientsManager clusterNodes {0} clusterName {1} redisConnectionString {2} servicestack licence {3}", clusterNodes,  clusterName, redisConnectionString, serviceStackLicense);
+            
             return redisManager;
         }
 
