@@ -1,5 +1,5 @@
 version: 1.0.{build}
-#skip_non_tags: true
+skip_non_tags: true
 before_build:
 - cmd: choco install redis-64
 - cmd: redis-server --service-install

@@ -1,7 +1,7 @@
 # NServiceBus4.Redis [![Build status](https://ci.appveyor.com/api/projects/status/i2b2phpdhk6boq5q?svg=true)](https://ci.appveyor.com/project/fabtesta/nservicebus4-redis) [![NuGet Status](http://img.shields.io/nuget/v/NServiceBus.Redis.svg)](https://www.nuget.org/packages/NServiceBus.Redis/)
 
-Redis Persistence for NServiceBus 4.4.x
-Version 1.x supports only TimeoutManager (IPersistTimeouts)
+Redis Persistence for NServiceBus 4.4.x.  
+Version 1.x supports only TimeoutManager (IPersistTimeouts).  
 
 Redis connection is based on ServiceStack.Redis library.
 
@@ -10,7 +10,10 @@ Redis connection is based on ServiceStack.Redis library.
 
 or
 
-* Install the [`NServiceBus.Redis`](https://www.nuget.org/packages/NServiceBus.Redis/) NuGet package using the Visual Studio NuGet Package Manager
+* Install the [`NServiceBus.Redis`](https://www.nuget.org/packages/NServiceBus.Redis/) NuGet package using the Visual Studio NuGet Package Manager or Package Manager
+```powershell
+Install-Package NServiceBus.Redis -Version 1.0.0
+```
 
 ### Configuration
 After adding a reference to it from your project, specify `RedisPersistence` to be used for persistence.
