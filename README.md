@@ -3,16 +3,14 @@
 Redis Persistence for NServiceBus 4.4.x.  
 Version 1.x supports only TimeoutManager (IPersistTimeouts).  
 
-Redis connection is based on ServiceStack.Redis library.
+Redis connection is based on [`ServiceStack.Redis`](https://github.com/ServiceStack/ServiceStack.Redis) library latest .NET 4.0 [`version`](https://github.com/ServiceStack/ServiceStack.Redis/tree/v4.0.54).
 
 ### Installation
-* Get the source and build locally
-
-or
-
+* Get the source and build locally  
+or  
 * Install the [`NServiceBus.Redis`](https://www.nuget.org/packages/NServiceBus.Redis/) NuGet package using the Visual Studio NuGet Package Manager or Package Manager
 ```powershell
-Install-Package NServiceBus.Redis -Version 1.0.0
+Install-Package NServiceBus.Redis -Version 1.0.1
 ```
 
 ### Configuration
@@ -22,11 +20,16 @@ After adding a reference to it from your project, specify `RedisPersistence` to 
 using NServiceBus;
 using NServiceBus.Redis;
 
-public class EndpointConfig : IConfigureThisEndpoint, AsA_Server
+public class EndpointConfig : IConfigureThisEndpoint, AsA_Server, IWantCustomInitialization
 {
-  public void Customize(BusConfiguration configuration)
+  public void Init()
   {
+    var conf = Configure.With();
     conf.UseRedisTimeoutPersister(endpointName);
+
+    //or
+
+    conf.UseRedisTimeoutPersister(endpointName, defaultPollingTimeout = 5); //MINUTES, default 10
   }
 }
 ```
@@ -45,10 +48,12 @@ It is possible to pass an already configured instance of IRedisClientsManager.
 using NServiceBus;
 using NServiceBus.Redis;
 
-public class EndpointConfig : IConfigureThisEndpoint, AsA_Server
+public class EndpointConfig : IConfigureThisEndpoint, AsA_Server, IWantCustomInitialization
 {
-  public void Customize(BusConfiguration configuration)
+  public void Init()
   {
+    var conf = Configure.With();
+    
     var yourRedisClientsManagerInstance = new RedisManagerPool(redisConnectionString);
     conf.UseRedisTimeoutPersister(endpointName, yourRedisClientsManagerInstance);
 

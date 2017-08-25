@@ -1,5 +1,4 @@
 ﻿using System.Configuration;
-using System.Globalization;
 using NServiceBus.Logging;
 using NServiceBus.Redis.Timeout;
 using NServiceBus.Timeout.Core;
