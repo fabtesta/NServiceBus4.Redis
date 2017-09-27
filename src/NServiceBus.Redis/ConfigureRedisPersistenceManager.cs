@@ -1,5 +1,7 @@
-﻿using System.Configuration;
+﻿using System;
+using System.Configuration;
 using NServiceBus.Logging;
+using NServiceBus.Redis.Gateway;
 using NServiceBus.Redis.Timeout;
 using NServiceBus.Timeout.Core;
 using ServiceStack;
@@ -11,38 +13,94 @@ namespace NServiceBus.Redis
     {
         private static readonly object SyncObj = new object();
         private static IRedisClientsManager _redisManager;
-        
-        static readonly ILog Logger = LogManager.GetLogger(typeof(ConfigureRedisPersistenceManager));                
 
-        public static Configure UseRedisTimeoutPersister(this Configure config, string endpointName, int defaultPollingTimeout = 10)
+        static readonly ILog Logger = LogManager.GetLogger(typeof(ConfigureRedisPersistenceManager));
+
+        /// <summary>
+        /// Configures default redisclientsmanager.
+        /// </summary>
+        public static Configure RedisStorage(this Configure config)
         {
-            Logger.InfoFormat("ConfigureRedisPersistenceManager UseRedisTimeoutPersister endpointName {0} defaultPollingTimeout {1}", endpointName,  defaultPollingTimeout);
-            return config.UseRedisTimeoutPersister(endpointName, GetRedisClientsManager(), defaultPollingTimeout);
+            Logger.InfoFormat(
+                "RedisStorage default");
+            return config.RedisStorage(GetRedisClientsManager());
         }
-        
-        public static Configure UseRedisTimeoutPersister(this Configure config, string endpointName, IRedisClientsManager redisClientsManager, int defaultPollingTimeout = 10)
+
+        /// <summary>
+        /// Configures your own instance of redisclientsmanager.
+        /// </summary>
+        public static Configure RedisStorage(this Configure config, IRedisClientsManager redisClientsManager)
         {
-            var redisTimeoutPersister = new RedisTimeoutPersistence(endpointName, redisClientsManager, defaultPollingTimeout);
-            config.Configurer.RegisterSingleton<IPersistTimeouts>(redisTimeoutPersister);
-            //config.Configurer.ConfigureComponent<RedisTimeoutPersistence>(DependencyLifecycle.SingleInstance);
-            Logger.InfoFormat("ConfigureRedisPersistenceManager UseRedisTimeoutPersister endpointName {0} defaultPollingTimeout {1} redisClientsManager {2}", endpointName,  defaultPollingTimeout, redisClientsManager.GetType().FullName);
+            Logger.InfoFormat(
+                "RedisStorage {0}", redisClientsManager.GetType().FullName);
+            config.Configurer.RegisterSingleton<IRedisClientsManager>(redisClientsManager);
             return config;
         }
-        
+
+        /// <summary>
+        /// Use Redis timeout persistence.
+        /// </summary>
+        public static Configure UseRedisTimeoutPersister(this Configure config, string endpointName,
+            int defaultPollingTimeout = 10)
+        {
+            config.Configurer.RegisterSingleton<IPersistTimeouts>(typeof(RedisTimeoutPersistence))
+                .ConfigureProperty<string>("endpointName", endpointName)
+                .ConfigureProperty<int>("defaultPollingTimeout", defaultPollingTimeout);
+            Logger.InfoFormat(
+                "ConfigureRedisPersistenceManager UseRedisTimeoutPersister endpointName {0} defaultPollingTimeout {1}",
+                endpointName, defaultPollingTimeout);
+            return config;
+        }
+
+        /// <summary>
+        /// Use Redis messages persistence by the gateway.
+        /// </summary>
+        public static Configure UseRedisGatewayStorage(this Configure config)
+        {
+            config.ThrowIfRedisNotConfigured();
+            return config.RunGateway(typeof(RedisGatewayPersistence));
+        }
+
+        /// <summary>
+        /// Use Redis for message deduplication by the gateway.
+        /// </summary>
+        public static Configure UseRedisGatewayDeduplicationStorage(this Configure config)
+        {
+            config.ThrowIfRedisNotConfigured();
+            config.Configurer.ConfigureComponent<RedisDeduplication>(DependencyLifecycle.SingleInstance);
+            return config;
+        }
+
+
         public static IRedisClientsManager GetRedisClientsManager()
         {
             var clusterNodes = ConfigurationManager.AppSettings["NServiceBus/Redis/RedisSentinelHosts"];
+            if(clusterNodes == null)
+                throw new Exception("Missing NServiceBus/Redis/RedisSentinelHosts appSettings key (leave it empty for single node connection pool).");
+
             var clusterName = ConfigurationManager.AppSettings["NServiceBus/Redis/RedisClusterName"];
-            var redisConnectionString = ConfigurationManager.AppSettings["NServiceBus/Redis/RedisConnectionString"].Replace(";", "&");
+            if (clusterName == null)
+                throw new Exception("Missing NServiceBus/Redis/RedisClusterName appSettings key (leave it empty for single node connection pool).");
+
+            var redisConnectionString = ConfigurationManager.AppSettings["NServiceBus/Redis/RedisConnectionString"]
+                .Replace(";", "&");
+            if (redisConnectionString == null)
+                throw new Exception("Missing NServiceBus/Redis/RedisConnectionString appSettings key.");
+
             var redisManager = InitRedisClientManager(clusterName, clusterNodes, redisConnectionString);
 
-            var serviceStackLicense = ConfigurationManager.AppSettings["servicestack:license"] != null ? "found" : "not found (missing servicestack:license key)";
-            Logger.InfoFormat("ConfigureRedisPersistenceManager GetRedisClientsManager clusterNodes {0} clusterName {1} redisConnectionString {2} servicestack licence {3}", clusterNodes,  clusterName, redisConnectionString, serviceStackLicense);
-            
+            var serviceStackLicense = ConfigurationManager.AppSettings["servicestack:license"] != null
+                ? "found"
+                : "not found (missing servicestack:license key)";
+            Logger.InfoFormat(
+                "ConfigureRedisPersistenceManager GetRedisClientsManager clusterNodes {0} clusterName {1} redisConnectionString {2} servicestack licence {3}",
+                clusterNodes, clusterName, redisConnectionString, serviceStackLicense);
+
             return redisManager;
         }
 
-        internal static IRedisClientsManager InitRedisClientManager(string clusterName, string clusterNodes, string redisConnectionString)
+        internal static IRedisClientsManager InitRedisClientManager(string clusterName, string clusterNodes,
+            string redisConnectionString)
         {
             lock (SyncObj)
             {
@@ -68,6 +126,14 @@ namespace NServiceBus.Redis
             }
 
             return _redisManager;
+        }
+
+        internal static void ThrowIfRedisNotConfigured(this Configure config)
+        {
+            if (!config.Configurer.HasComponent<IRedisClientsManager>())
+            {
+                throw new Exception("Call config.RedisStorage() first.");
+            }
         }
     }
 }

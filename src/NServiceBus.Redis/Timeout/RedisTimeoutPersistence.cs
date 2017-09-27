@@ -24,91 +24,122 @@ namespace NServiceBus.Redis.Timeout
             _redisClientsManager = redisClientsManager;
             _defaultPollingTimeout = defaultPollingTimeout;
             
-            Logger.InfoFormat("RedisTimeoutPersistence instance endpointName {0} defaultPollingTimeout {1} redisClientsManager {2}", endpointName,  defaultPollingTimeout, redisClientsManager.GetType().FullName);
-            
+            Logger.InfoFormat("RedisTimeoutPersistence 2.x instance endpointName {0} defaultPollingTimeout {1} redisClientsManager {2}", endpointName,  defaultPollingTimeout, redisClientsManager.GetType().FullName);            
         }
 
         public List<Tuple<string, DateTime>> GetNextChunk(DateTime startSlice, out DateTime nextTimeToRunQuery)
         {
-            var endSlice = DateTime.UtcNow;
-            Logger.DebugFormat("GetNextChunk from {0} to {1} with default polling timeout {2}", startSlice.ToUnixTimeSeconds(),  endSlice.ToUnixTimeSeconds(), TimeSpan.FromMinutes(_defaultPollingTimeout));
-            using (var redisClient = _redisClientsManager.GetClient())
+            try
             {
-                var timeoutRange = redisClient.As<TimeoutEntity>().SortedSets[_endpointName].GetRangeByLowestScore(startSlice.ToUnixTimeSeconds(),  endSlice.ToUnixTimeSeconds()).Select(r => Tuple.Create(r.Id, r.Time)).ToList();
-                var nextTimeoutRange = redisClient.As<TimeoutEntity>().SortedSets[_endpointName].GetRangeByLowestScore(endSlice.ToUnixTimeSeconds() + 1, DateTime.MaxValue.ToUnixTimeSeconds()).Select(r => r.Time).ToList();                
-                if (nextTimeoutRange.Any())
+                var endSlice = DateTime.UtcNow;
+                Logger.DebugFormat("GetNextChunk from {0} to {1} with default polling timeout {2}", startSlice.ToUnixTimeSeconds(),  endSlice.ToUnixTimeSeconds(), TimeSpan.FromMinutes(_defaultPollingTimeout));
+                using (var redisClient = _redisClientsManager.GetClient())
                 {
-                    nextTimeToRunQuery = nextTimeoutRange.First();
+                    var timeoutRange = redisClient.As<TimeoutEntity>().SortedSets[_endpointName].GetRangeByLowestScore(startSlice.ToUnixTimeSeconds(),  endSlice.ToUnixTimeSeconds()).Select(r => Tuple.Create(r.Id, r.Time)).ToList();
+                    var nextTimeoutRange = redisClient.As<TimeoutEntity>().SortedSets[_endpointName].GetRangeByLowestScore(endSlice.ToUnixTimeSeconds() + 1, DateTime.MaxValue.ToUnixTimeSeconds()).Select(r => r.Time).ToList();                
+                    if (nextTimeoutRange.Any())
+                    {
+                        nextTimeToRunQuery = nextTimeoutRange.First();
+                    }
+                    else
+                    {
+                        nextTimeToRunQuery = endSlice.AddMinutes(_defaultPollingTimeout);
+                    }
+                    Logger.DebugFormat("GetNextChunk timeoutRange {0} nextTimeoutRange {1} nextTimeToRunQuery {2}", timeoutRange.Count,  nextTimeoutRange.Count, nextTimeToRunQuery);
+                    return timeoutRange;
                 }
-                else
-                {
-                    nextTimeToRunQuery = endSlice.AddMinutes(_defaultPollingTimeout);
-                }
-                Logger.DebugFormat("GetNextChunk timeoutRange {0} nextTimeoutRange {1} nextTimeToRunQuery {2}", timeoutRange.Count,  nextTimeoutRange.Count, nextTimeToRunQuery);
-                return timeoutRange;
-            }            
+            }
+            catch (Exception e)
+            {
+                Logger.Error(string.Format("ERROR GetNextChunk {0}", startSlice.ToUnixTimeSeconds()), e);
+                throw;
+            }    
         }
 
         public void Add(TimeoutData timeoutData)
         {
-            timeoutData.Id = Guid.NewGuid().ToString();
-            Logger.DebugFormat("Add timeoutData {0}", timeoutData.Id);
-            var timeoutEntity = new TimeoutEntity
+            try
             {
-                Id = timeoutData.Id,
-                Destination = timeoutData.Destination != null ? timeoutData.Destination.ToString() : null,
-                SagaId = timeoutData.SagaId,
-                State = timeoutData.State,
-                Time = timeoutData.Time,
-                TimeString = timeoutData.Time.ToString("O"),
-                Headers = timeoutData.Headers,
-                CorrelationId = timeoutData.CorrelationId,
-                OwningTimeoutManager = timeoutData.OwningTimeoutManager                
-            };
+                timeoutData.Id = Guid.NewGuid().ToString();
+                Logger.DebugFormat("Add timeoutData {0}", timeoutData.Id);
+                var timeoutEntity = new TimeoutEntity
+                {
+                    Id = timeoutData.Id,
+                    Destination = timeoutData.Destination != null ? timeoutData.Destination.ToString() : null,
+                    SagaId = timeoutData.SagaId,
+                    State = timeoutData.State,
+                    Time = timeoutData.Time,
+                    TimeString = timeoutData.Time.ToString("O"),
+                    Headers = timeoutData.Headers,
+                    CorrelationId = timeoutData.CorrelationId,
+                    OwningTimeoutManager = timeoutData.OwningTimeoutManager                
+                };
             
-            using (var redisClient = _redisClientsManager.GetClient())
+                using (var redisClient = _redisClientsManager.GetClient())
+                {
+                    redisClient.As<TimeoutEntity>().AddItemToSortedSet(redisClient.As<TimeoutEntity>().SortedSets[_endpointName], timeoutEntity, timeoutEntity.Time.ToUnixTimeSeconds());              
+                    Logger.DebugFormat("Added timeoutEntity {0} with score {1} to sorted set {2}", timeoutEntity.Id, timeoutEntity.Time.ToUnixTimeSeconds(), redisClient.As<TimeoutEntity>().SortedSets[_endpointName].ToUrn());            
+                }
+            }
+            catch (Exception e)
             {
-                redisClient.As<TimeoutEntity>().AddItemToSortedSet(redisClient.As<TimeoutEntity>().SortedSets[_endpointName], timeoutEntity, timeoutEntity.Time.ToUnixTimeSeconds());              
-                Logger.DebugFormat("Added timeoutEntity {0} with score {1} to sorted set {2}", timeoutEntity.Id, timeoutEntity.Time.ToUnixTimeSeconds(), redisClient.As<TimeoutEntity>().SortedSets[_endpointName].ToUrn());            
+                Logger.Error(string.Format("ERROR Add {0}", timeoutData), e);
+                throw;
             }
         }
 
         public bool TryRemove(string timeoutId, out TimeoutData timeoutData)
         {
-            using (var redisClient = _redisClientsManager.GetClient())
+            try
             {
-                var timeoutEntity = redisClient.As<TimeoutEntity>().SortedSets[_endpointName].GetAll().FirstOrDefault(x => x.Id == timeoutId);
-                if (timeoutEntity == null)
-                    timeoutData = default(TimeoutData);
-                else
+                using (var redisClient = _redisClientsManager.GetClient())
                 {
-                    redisClient.As<TimeoutEntity>().SortedSets[_endpointName].Remove(timeoutEntity);
-                    timeoutData = new TimeoutData
+                    var timeoutEntity = redisClient.As<TimeoutEntity>().SortedSets[_endpointName].GetAll().FirstOrDefault(x => x.Id == timeoutId);
+                    if (timeoutEntity == null)
+                        timeoutData = default(TimeoutData);
+                    else
                     {
-                        Id = timeoutEntity.Id,
-                        Destination = timeoutEntity.Destination != null ? Address.Parse(timeoutEntity.Destination) : null,
-                        SagaId = timeoutEntity.SagaId,
-                        State = timeoutEntity.State,
-                        Time = timeoutEntity.Time,
-                        Headers = timeoutEntity.Headers,
-                        CorrelationId = timeoutEntity.CorrelationId,
-                        OwningTimeoutManager = timeoutEntity.OwningTimeoutManager
-                    };
-                }
+                        redisClient.As<TimeoutEntity>().SortedSets[_endpointName].Remove(timeoutEntity);
+                        timeoutData = new TimeoutData
+                        {
+                            Id = timeoutEntity.Id,
+                            Destination = timeoutEntity.Destination != null ? Address.Parse(timeoutEntity.Destination) : null,
+                            SagaId = timeoutEntity.SagaId,
+                            State = timeoutEntity.State,
+                            Time = timeoutEntity.Time,
+                            Headers = timeoutEntity.Headers,
+                            CorrelationId = timeoutEntity.CorrelationId,
+                            OwningTimeoutManager = timeoutEntity.OwningTimeoutManager
+                        };
+                    }
                 
-                Logger.DebugFormat("TryRemove timeoutData {0} from sorted set {1}. Found? {2}", timeoutId, redisClient.As<TimeoutEntity>().SortedSets[_endpointName].ToUrn(), timeoutData != default(TimeoutData));
-            }
+                    Logger.DebugFormat("TryRemove timeoutData {0} from sorted set {1}. Found? {2}", timeoutId, redisClient.As<TimeoutEntity>().SortedSets[_endpointName].ToUrn(), timeoutData != default(TimeoutData));
+                }
             
-            return timeoutData != default(TimeoutData);            
+                return timeoutData != default(TimeoutData);
+            }
+            catch (Exception e)
+            {
+                Logger.Error(string.Format("ERROR TryRemove {0}", timeoutId), e);
+                throw;
+            }        
         }
 
         public void RemoveTimeoutBy(Guid sagaId)
         {
-            using (var redisClient = _redisClientsManager.GetClient())
+            try
             {
-                var timeoutEntity = redisClient.As<TimeoutEntity>().SortedSets[_endpointName].GetAll().FirstOrDefault(x => x.SagaId == sagaId);                                
-                redisClient.As<TimeoutEntity>().SortedSets[_endpointName].Remove(timeoutEntity);
-                Logger.DebugFormat("RemoveTimeoutBy sagaId {0} from sorted set {1}. Found? {2}", sagaId, redisClient.As<TimeoutEntity>().SortedSets[_endpointName].ToUrn(), timeoutEntity != null);
+                using (var redisClient = _redisClientsManager.GetClient())
+                {
+                    var timeoutEntity = redisClient.As<TimeoutEntity>().SortedSets[_endpointName].GetAll().FirstOrDefault(x => x.SagaId == sagaId);                                
+                    redisClient.As<TimeoutEntity>().SortedSets[_endpointName].Remove(timeoutEntity);
+                    Logger.DebugFormat("RemoveTimeoutBy sagaId {0} from sorted set {1}. Found? {2}", sagaId, redisClient.As<TimeoutEntity>().SortedSets[_endpointName].ToUrn(), timeoutEntity != null);
+                }
+            }
+            catch (Exception e)
+            {
+                Logger.Error(string.Format("ERROR RemoveTimeoutBy {0}", sagaId), e);
+                throw;
             }
         }
     }

@@ -60,6 +60,10 @@
   <ItemGroup>
     <Compile Include="ConfigureRedisPersistenceManager.cs" />
     <Compile Include="Extensions\DateTimeExtensions.cs" />
+    <Compile Include="Extensions\StringExtensions.cs" />
+    <Compile Include="Gateway\GatewayEntity.cs" />
+    <Compile Include="Gateway\RedisDeduplication.cs" />
+    <Compile Include="Gateway\RedisGatewayPersistence.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Timeout\RedisTimeoutPersistence.cs" />
     <Compile Include="Timeout\TimeoutEntity.cs" />
@@ -67,6 +71,7 @@
   <ItemGroup>
     <None Include="packages.config" />
   </ItemGroup>
+  <ItemGroup />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
        Other similar extension points exist, see Microsoft.Common.targets.

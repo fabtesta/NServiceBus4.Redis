@@ -6,14 +6,15 @@ using NServiceBus.Timeout.Core;
 using ServiceStack.Redis;
 using Xunit;
 
-namespace NServiceBus.Redis.Test
+namespace NServiceBus.Redis.Test.Timeout
 {
+    [Trait("Category", "Integration")]
     public class RedisTimeoutPersistenceTests
     {
         private readonly IRedisClientsManager _redisClientsManager;
         private readonly RedisTimeoutPersistence _redisTimeoutPersistence;
 
-        private readonly string endpointName = "nservicebus4-persistence:test";
+        private readonly string endpointName = "nservicebus4-persistence:timeout:test";
         public RedisTimeoutPersistenceTests()
         {
             _redisClientsManager = ConfigureRedisPersistenceManager.GetRedisClientsManager();
