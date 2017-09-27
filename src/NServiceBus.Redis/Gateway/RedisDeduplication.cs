@@ -10,15 +10,26 @@ namespace NServiceBus.Redis.Gateway
     {
         static readonly ILog Logger = LogManager.GetLogger(typeof(RedisDeduplication));
 
-        private readonly string _endpointName;
-        private readonly int _defaultEntityTtl;
-        private readonly IRedisClientsManager _redisClientsManager;
+        public string EndpointName { get; set; }
+        public int DefaultEntityTtl { get; set; }
+        public IRedisClientsManager RedisClientsManager { get; set; }
+
+        public RedisDeduplication()
+        {
+            Logger.InfoFormat("RedisDeduplication 2.x instance");
+        }
+
+        public RedisDeduplication(IRedisClientsManager redisClientsManager)
+        {
+            RedisClientsManager = redisClientsManager;
+            Logger.InfoFormat("RedisDeduplication 2.x instance redisClientsManager {0}", redisClientsManager.GetType().FullName);
+        }
 
         public RedisDeduplication(string endpointName, IRedisClientsManager redisClientsManager, int defaultEntityTtl)
         {
-            _redisClientsManager = redisClientsManager;
-            _defaultEntityTtl = defaultEntityTtl;
-            _endpointName = endpointName;
+            RedisClientsManager = redisClientsManager;
+            DefaultEntityTtl = defaultEntityTtl;
+            EndpointName = endpointName;
 
             Logger.InfoFormat("RedisDeduplication 2.x instance endpointName {0} defaultEntityTtl {1} redisClientsManager {2}", endpointName, defaultEntityTtl, redisClientsManager.GetType().FullName);
         }
@@ -27,9 +38,9 @@ namespace NServiceBus.Redis.Gateway
         {
             try
             {
-                using (var redisClient = _redisClientsManager.GetClient())
+                using (var redisClient = RedisClientsManager.GetClient())
                 {
-                    var gatewayEntity = redisClient.As<GatewayEntity>().GetValue(_endpointName + clientId);
+                    var gatewayEntity = redisClient.As<GatewayEntity>().GetValue(EndpointName + clientId);
 
                     if (gatewayEntity != null)
                     {                    
@@ -42,8 +53,8 @@ namespace NServiceBus.Redis.Gateway
                         TimeReceived = timeReceived
                     };            
                 
-                    redisClient.As<GatewayEntity>().SetValue(_endpointName + gatewayEntity.Id, gatewayEntity, TimeSpan.FromMinutes(_defaultEntityTtl));
-                    Logger.DebugFormat("DeduplicatedMessage gatewayEntity {0} with ttl {1}", gatewayEntity.Id, _defaultEntityTtl);
+                    redisClient.As<GatewayEntity>().SetValue(EndpointName + gatewayEntity.Id, gatewayEntity, TimeSpan.FromMinutes(DefaultEntityTtl));
+                    Logger.DebugFormat("DeduplicatedMessage gatewayEntity {0} with ttl {1}", gatewayEntity.Id, DefaultEntityTtl);
                 }
                 return true;
             }

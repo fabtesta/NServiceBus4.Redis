@@ -1,11 +1,8 @@
 ﻿using System;
 using System.Configuration;
-using NServiceBus.Gateway.Deduplication;
-using NServiceBus.Gateway.Persistence;
 using NServiceBus.Logging;
 using NServiceBus.Redis.Gateway;
 using NServiceBus.Redis.Timeout;
-using NServiceBus.Timeout.Core;
 using ServiceStack;
 using ServiceStack.Redis;
 
@@ -14,8 +11,7 @@ namespace NServiceBus.Redis
     public static class ConfigureRedisPersistenceManager
     {
         private static readonly object SyncObj = new object();
-        private static IRedisClientsManager _redisManager;
-
+        private static IRedisClientsManager _redisClientsManager;        
         static readonly ILog Logger = LogManager.GetLogger(typeof(ConfigureRedisPersistenceManager));
 
         /// <summary>
@@ -36,6 +32,7 @@ namespace NServiceBus.Redis
             Logger.InfoFormat(
                 "RedisStorage {0}", redisClientsManager.GetType().FullName);
             config.Configurer.RegisterSingleton<IRedisClientsManager>(redisClientsManager);
+            config.Configurer.ConfigureComponent(redisClientsManager.GetType(), DependencyLifecycle.SingleInstance);
             return config;
         }
 
@@ -47,9 +44,9 @@ namespace NServiceBus.Redis
         {
             config.ThrowIfRedisNotConfigured();
 
-            config.Configurer.RegisterSingleton<IPersistTimeouts>(typeof(RedisTimeoutPersistence))
-                .ConfigureProperty<string>("endpointName", endpointName)
-                .ConfigureProperty<int>("defaultPollingTimeout", defaultPollingTimeout);
+            config.Configurer.ConfigureComponent<RedisTimeoutPersistence>(DependencyLifecycle.SingleInstance)
+                .ConfigureProperty(p => p.EndpointName, endpointName)
+                .ConfigureProperty(p => p.DefaultPollingTimeout, defaultPollingTimeout);            
             Logger.InfoFormat(
                 "ConfigureRedisPersistenceManager UseRedisTimeoutPersister endpointName {0} defaultPollingTimeout {1}",
                 endpointName, defaultPollingTimeout);
@@ -64,13 +61,13 @@ namespace NServiceBus.Redis
         {
             config.ThrowIfRedisNotConfigured();
 
-            config.Configurer.RegisterSingleton<IPersistMessages>(typeof(RedisGatewayPersistence))
-                .ConfigureProperty<string>("endpointName", endpointName)
-                .ConfigureProperty<int>("defaultEntityTtl", defaultEntityTtl);
+            config.Configurer.ConfigureComponent<RedisGatewayPersistence>(DependencyLifecycle.SingleInstance)
+                .ConfigureProperty(p => p.EndpointName, endpointName)
+                .ConfigureProperty(p => p.DefaultEntityTtl, defaultEntityTtl);
             Logger.InfoFormat(
                 "ConfigureRedisPersistenceManager UseRedisGatewayStorage endpointName {0} defaultEntityTtl {1}",
                 endpointName, defaultEntityTtl);
-            return config.RunGateway(typeof(RedisGatewayPersistence));
+            return config.RunGateway();
         }
 
         /// <summary>
@@ -81,17 +78,17 @@ namespace NServiceBus.Redis
         {
             config.ThrowIfRedisNotConfigured();
 
-            config.Configurer.RegisterSingleton<IDeduplicateMessages>(typeof(RedisDeduplication))
-                .ConfigureProperty<string>("endpointName", endpointName)
-                .ConfigureProperty<int>("defaultEntityTtl", defaultEntityTtl);
+            config.Configurer.ConfigureComponent<RedisDeduplication>(DependencyLifecycle.SingleInstance)
+                .ConfigureProperty(p => p.EndpointName, endpointName)
+                .ConfigureProperty(p => p.DefaultEntityTtl, defaultEntityTtl);            
+            config.RunGateway();
             Logger.InfoFormat(
                 "ConfigureRedisPersistenceManager UseRedisGatewayDeduplicationStorage endpointName {0} defaultEntityTtl {1}",
-                endpointName, defaultEntityTtl);            
-            return config;
+                endpointName, defaultEntityTtl);
+             return config;
         }
 
-
-        public static IRedisClientsManager GetRedisClientsManager()
+        private static IRedisClientsManager GetRedisClientsManager()
         {
             var clusterNodes = ConfigurationManager.AppSettings["NServiceBus/Redis/RedisSentinelHosts"];
             if(clusterNodes == null)
@@ -123,12 +120,12 @@ namespace NServiceBus.Redis
         {
             lock (SyncObj)
             {
-                if (_redisManager == null)
+                if (_redisClientsManager == null)
                 {
                     if (string.IsNullOrWhiteSpace(clusterName) ||
                         string.IsNullOrWhiteSpace(clusterNodes))
                     {
-                        _redisManager = new RedisManagerPool(redisConnectionString);
+                        _redisClientsManager = new RedisManagerPool(redisConnectionString);
                     }
                     else
                     {
@@ -139,12 +136,12 @@ namespace NServiceBus.Redis
                         sentinel.RedisManagerFactory =
                             (master, slaves) => new PooledRedisClientManager(master, slaves);
 
-                        _redisManager = sentinel.Start();
+                        _redisClientsManager = sentinel.Start();
                     }
                 }
             }
 
-            return _redisManager;
+            return _redisClientsManager;
         }
 
         internal static void ThrowIfRedisNotConfigured(this Configure config)

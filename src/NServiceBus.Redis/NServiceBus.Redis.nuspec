@@ -1,16 +1,16 @@
 <?xml version="1.0"?>
 <package >
   <metadata>
-    <id>NServiceBus.Redis</id>
-    <version>2.0.0-GatewayDedup</version>
-    <title>NServiceBus.Redis</title>
-    <authors>Fabio Testa</authors>
-    <owners>Fabio Testa</owners>
+    <id>$id$</id>
+    <version>$version$</version>
+    <title>$title$</title>
+    <authors>$author$</authors>
+    <owners>$author$</owners>
     <licenseUrl>https://raw.githubusercontent.com/fabtesta/NServiceBus4.Redis/master/LICENSE</licenseUrl>
     <projectUrl>https://github.com/fabtesta/NServiceBus4.Redis</projectUrl>
     <iconUrl>https://redis.io/images/redis-white.png</iconUrl>
     <requireLicenseAcceptance>true</requireLicenseAcceptance>
-    <description>NServiceBus 4.4.x Redis Persistence</description>
+    <description>$description$</description>
     <releaseNotes>v 2.x supports Timeouts, Gateway, Deduplication</releaseNotes>
     <copyright>Copyright 2017</copyright>
     <tags>nservicebus redis</tags>

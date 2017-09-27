@@ -12,15 +12,26 @@ namespace NServiceBus.Redis.Gateway
     {
         static readonly ILog Logger = LogManager.GetLogger(typeof(RedisGatewayPersistence));
 
-        private readonly string _endpointName;
-        private readonly int _defaultEntityTtl;
-        private readonly IRedisClientsManager _redisClientsManager;
+        public string EndpointName { get; set; }
+        public int DefaultEntityTtl { get; set; }
+        public IRedisClientsManager RedisClientsManager { get; set; }
+
+        public RedisGatewayPersistence()
+        {
+            Logger.InfoFormat("RedisGatewayPersistence 2.x instance");
+        }
+
+        public RedisGatewayPersistence(IRedisClientsManager redisClientsManager)
+        {
+            RedisClientsManager = redisClientsManager;
+            Logger.InfoFormat("RedisGatewayPersistence 2.x instance redisClientsManager {0}", redisClientsManager.GetType().FullName);
+        }
 
         public RedisGatewayPersistence(string endpointName, IRedisClientsManager redisClientsManager, int defaultEntityTtl)
         {
-            _redisClientsManager = redisClientsManager;
-            _defaultEntityTtl = defaultEntityTtl;
-            _endpointName = endpointName;
+            RedisClientsManager = redisClientsManager;
+            DefaultEntityTtl = defaultEntityTtl;
+            EndpointName = endpointName;
 
             Logger.InfoFormat("RedisGatewayPersistence 2.x instance endpointName {0} defaultEntityTtl {1} redisClientsManager {2}", endpointName, defaultEntityTtl, redisClientsManager.GetType().FullName);
         }
@@ -39,10 +50,10 @@ namespace NServiceBus.Redis.Gateway
                 };
 
                 messageStream.Read(gatewayEntity.OriginalMessage, 0, (int)messageStream.Length);
-                using (var redisClient = _redisClientsManager.GetClient())
+                using (var redisClient = RedisClientsManager.GetClient())
                 {
-                    redisClient.As<GatewayEntity>().SetValue(_endpointName + gatewayEntity.Id, gatewayEntity, TimeSpan.FromMinutes(_defaultEntityTtl));
-                    Logger.DebugFormat("Added gatewayEntity {0} with ttl {1}", gatewayEntity.Id, _defaultEntityTtl);
+                    redisClient.As<GatewayEntity>().SetValue(EndpointName + gatewayEntity.Id, gatewayEntity, TimeSpan.FromMinutes(DefaultEntityTtl));
+                    Logger.DebugFormat("Added gatewayEntity {0} with ttl {1}", gatewayEntity.Id, DefaultEntityTtl);
                 }
                 return true;
             }
@@ -60,9 +71,9 @@ namespace NServiceBus.Redis.Gateway
                 message = null;
                 headers = null;
 
-                using (var redisClient = _redisClientsManager.GetClient())
+                using (var redisClient = RedisClientsManager.GetClient())
                 {
-                    var gatewayEntity = redisClient.As<GatewayEntity>().GetValue(_endpointName + clientId.EscapeClientId());
+                    var gatewayEntity = redisClient.As<GatewayEntity>().GetValue(EndpointName + clientId.EscapeClientId());
 
                     if (gatewayEntity == null)
                         throw new InvalidOperationException("No message with id: " + clientId + "found");
@@ -73,7 +84,7 @@ namespace NServiceBus.Redis.Gateway
                     headers = gatewayEntity.Headers;
 
                     gatewayEntity.Acknowledged = true;
-                    redisClient.As<GatewayEntity>().SetValue(_endpointName + gatewayEntity.Id.EscapeClientId(), gatewayEntity, TimeSpan.FromMinutes(_defaultEntityTtl));
+                    redisClient.As<GatewayEntity>().SetValue(EndpointName + gatewayEntity.Id.EscapeClientId(), gatewayEntity, TimeSpan.FromMinutes(DefaultEntityTtl));
 
                     Logger.DebugFormat("Acked gatewayEntity {0}", gatewayEntity.Id);
 
@@ -91,14 +102,14 @@ namespace NServiceBus.Redis.Gateway
         {
             try
             {
-                using (var redisClient = _redisClientsManager.GetClient())
+                using (var redisClient = RedisClientsManager.GetClient())
                 {
-                    var gatewayEntity = redisClient.As<GatewayEntity>().GetValue(_endpointName + clientId.EscapeClientId());
+                    var gatewayEntity = redisClient.As<GatewayEntity>().GetValue(EndpointName + clientId.EscapeClientId());
 
                     if (gatewayEntity == null)
                         throw new InvalidOperationException("No message with id: " + clientId + "found");
                     gatewayEntity.Headers[headerKey] = newValue;
-                    redisClient.As<GatewayEntity>().SetValue(_endpointName + gatewayEntity.Id.EscapeClientId(), gatewayEntity, TimeSpan.FromMinutes(_defaultEntityTtl));
+                    redisClient.As<GatewayEntity>().SetValue(EndpointName + gatewayEntity.Id.EscapeClientId(), gatewayEntity, TimeSpan.FromMinutes(DefaultEntityTtl));
 
                     Logger.DebugFormat("UpdatedHeader gatewayEntity {0}", gatewayEntity.Id);                
                 }
