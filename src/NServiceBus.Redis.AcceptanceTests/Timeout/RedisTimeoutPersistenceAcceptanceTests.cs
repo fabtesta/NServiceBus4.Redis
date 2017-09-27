@@ -1,14 +1,15 @@
-﻿using NServiceBus.Redis.AcceptanceTests.EndpointTemplates;
+﻿using System;
+using NServiceBus.AcceptanceTesting;
+using NServiceBus.Redis.AcceptanceTests.EndpointTemplates;
+using Xunit;
 
-namespace NServiceBus.AcceptanceTests.BasicMessaging
+namespace NServiceBus.Redis.AcceptanceTests.Timeout
 {
-    using System;
-    using AcceptanceTesting;
-    using NUnit.Framework;
-
-    public class When_Deferring_a_message : NServiceBusAcceptanceTest
+    [Trait("Category", "Integration")]
+    [Collection("NServiceBusAcceptanceTest")]
+    public class RedisTimeoutPersistenceAcceptanceTests
     {
-        [Test]
+        [Fact]
         public void Message_should_be_received()
         {
             var context = new Context();
@@ -18,7 +19,7 @@ namespace NServiceBus.AcceptanceTests.BasicMessaging
                     .Done(c => c.WasCalled)
                     .Run();
 
-            Assert.IsTrue(context.WasCalled);
+            Assert.True(context.WasCalled);
         }
 
         public class Context : ScenarioContext

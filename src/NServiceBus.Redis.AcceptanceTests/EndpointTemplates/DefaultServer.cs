@@ -13,29 +13,23 @@ namespace NServiceBus.Redis.AcceptanceTests.EndpointTemplates
     {
         public Configure GetConfiguration(RunDescriptor runDescriptor, EndpointConfiguration endpointConfiguration, IConfigurationSource configSource)
         {
-            var settings = runDescriptor.Settings;
-                        
             var types = GetTypesToUse(endpointConfiguration);
 
-            var transportToUse = settings.GetOrNull("Transport");
-
-            Configure.Features.Enable<Features.Sagas>();
+            Configure.Features.Disable<Features.Sagas>();
+            Configure.Features.Enable<Features.Gateway>();
+            Configure.Features.Enable<Features.TimeoutManager>();
+            Configure.Serialization.Json();
 
             SettingsHolder.SetDefault("ScaleOut.UseSingleBrokerQueue", true);
 
             var config = Configure.With(types)
                             .DefineEndpointName(endpointConfiguration.EndpointName)
                             .CustomConfigurationSource(configSource)
-                            .DefineStorage()
-                            .DefineSerializer()
-                            .DefineTransport()
-                            .DefineTimeoutPersister();
-
-            if (transportToUse == null || transportToUse.Contains("RabbitMq"))
-            {
-                config.DefineTimeoutPersister(settings.GetOrNull("TimeoutPersister"));
-            }
-            
+                            .RedisStorage()
+                            .UseTransport<RabbitMQ>()
+                            .UseRedisGatewayStorage(endpointConfiguration.EndpointName)
+                            .UseRedisGatewayDeduplicationStorage(endpointConfiguration.EndpointName)
+                            .UseRedisTimeoutPersister(endpointConfiguration.EndpointName);            
             return config.UnicastBus();
         }
 
@@ -47,7 +41,6 @@ namespace NServiceBus.Redis.AcceptanceTests.EndpointTemplates
                 //exclude all test types by default
                                   .Where(a => a != Assembly.GetExecutingAssembly())
                                   .SelectMany(a => a.GetTypes());
-
 
             types = types.Union(GetNestedTypeRecursive(endpointConfiguration.BuilderType.DeclaringType, endpointConfiguration.BuilderType));
 

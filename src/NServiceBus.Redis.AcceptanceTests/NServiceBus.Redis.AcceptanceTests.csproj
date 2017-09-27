@@ -42,6 +42,14 @@
       <HintPath>..\packages\NServiceBus.4.4.2\lib\net40\NServiceBus.Core.dll</HintPath>
       <Private>True</Private>
     </Reference>
+    <Reference Include="NServiceBus.Transports.RabbitMQ, Version=1.1.5.0, Culture=neutral, PublicKeyToken=9fc386479f8a226c, processorArchitecture=MSIL">
+      <HintPath>..\packages\NServiceBus.RabbitMQ.1.1.5\lib\net40\NServiceBus.Transports.RabbitMQ.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
+    <Reference Include="RabbitMQ.Client, Version=3.2.1.0, Culture=neutral, PublicKeyToken=89e7d7c5feba84ce, processorArchitecture=MSIL">
+      <HintPath>..\packages\RabbitMQ.Client.3.2.1\lib\net30\RabbitMQ.Client.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
     <Reference Include="System" />
     <Reference Include="System.Core" />
     <Reference Include="System.Web" />
@@ -75,10 +83,6 @@
     <Compile Include="NServiceBusAcceptanceTest.cs" />
     <Compile Include="NServiceBusAcceptanceTestCollection.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="ScenarioDescriptors\Storage.cs" />
-    <Compile Include="ScenarioDescriptors\TimeoutPersisters.cs" />
-    <Compile Include="ScenarioDescriptors\Transports.cs" />
-    <Compile Include="ScenarioDescriptors\TypeScanner.cs" />
     <Compile Include="Timeout\When_Deferring_a_message.cs" />
   </ItemGroup>
   <ItemGroup>

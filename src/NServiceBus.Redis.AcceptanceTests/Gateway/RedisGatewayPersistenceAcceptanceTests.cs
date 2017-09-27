@@ -5,11 +5,12 @@ using System.Web;
 using NServiceBus.AcceptanceTesting;
 using NServiceBus.Config;
 using NServiceBus.Gateway.Utils;
+using NServiceBus.Redis.AcceptanceTests.EndpointTemplates;
 using Xunit;
 
 namespace NServiceBus.Redis.AcceptanceTests.Gateway
 {
-   
+    [Trait("Category", "Integration")]
     [Collection("NServiceBusAcceptanceTest")]
     public class RedisGatewayPersistenceAcceptanceTests
     {
@@ -68,7 +69,7 @@ namespace NServiceBus.Redis.AcceptanceTests.Gateway
                     }
                 }))
                 .Done(c => c.GotMessage)
-                .Repeat(r => r.For(ScenarioDescriptors.Transports.Default))
+                .Repeat(r => r.For(Transports.Default))
                 .Should(c =>
                 {
                     Assert.True(c.GotMessage);
@@ -88,11 +89,11 @@ namespace NServiceBus.Redis.AcceptanceTests.Gateway
         {
             public Headquarters()
             {
-                EndpointSetup<ScenarioDescriptors.DefaultServer>(c =>
-                {
-                    c.RunGateway().UseInMemoryGatewayPersister();
-                    Configure.Serialization.Xml();
-                })
+                EndpointSetup<DefaultServer>(c =>
+                    {
+                        c.RunGateway().UseInMemoryGatewayPersister();
+                        Configure.Serialization.Xml();
+                    })
                     .IncludeType<MyRequest>()
                     .AllowExceptions()
                     .WithConfig<GatewayConfig>(c =>
@@ -121,10 +122,5 @@ namespace NServiceBus.Redis.AcceptanceTests.Gateway
                 }
             }
         }
-    }
-
-    [Serializable]
-    public class MyRequest : IMessage
-    {
     }
 }
