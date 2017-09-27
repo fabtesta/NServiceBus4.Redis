@@ -88,7 +88,7 @@ namespace NServiceBus.Redis
              return config;
         }
 
-        private static IRedisClientsManager GetRedisClientsManager()
+        internal static IRedisClientsManager GetRedisClientsManager()
         {
             var clusterNodes = ConfigurationManager.AppSettings["NServiceBus/Redis/RedisSentinelHosts"];
             if(clusterNodes == null)
