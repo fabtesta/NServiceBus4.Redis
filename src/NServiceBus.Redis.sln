@@ -5,7 +5,7 @@ VisualStudioVersion = 14.0.25420.1
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "NServiceBus.Redis", "NServiceBus.Redis\NServiceBus.Redis.csproj", "{9C9E7320-9621-4D1C-94F0-4DDACEF1D63E}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "NServiceBus.Redis.Test", "NServiceBus.Redis.Test\NServiceBus.Redis.Test.csproj", "{B412D837-BE3E-4D31-81AF-539D3F420254}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "NServiceBus.Redis.Tests", "NServiceBus.Redis.Tests\NServiceBus.Redis.Tests.csproj", "{B412D837-BE3E-4D31-81AF-539D3F420254}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "NServiceBus.Redis.AcceptanceTests", "NServiceBus.Redis.AcceptanceTests\NServiceBus.Redis.AcceptanceTests.csproj", "{68E38D2E-B33B-4DDD-972B-F5333C0FDA69}"
 EndProject

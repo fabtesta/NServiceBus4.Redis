@@ -6,7 +6,7 @@ using NServiceBus.Timeout.Core;
 using ServiceStack.Redis;
 using Xunit;
 
-namespace NServiceBus.Redis.Test.Timeout
+namespace NServiceBus.Redis.Tests.Timeout
 {
     [Trait("Category", "Integration")]
     public class RedisTimeoutPersistenceTests

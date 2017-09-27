@@ -2,11 +2,11 @@
 using System.Collections.Generic;
 using System.Transactions;
 using NServiceBus.Redis.Extensions;
+using NServiceBus.Redis.Gateway;
 using ServiceStack.Redis;
 using Xunit;
-using NServiceBus.Redis.Gateway;
 
-namespace NServiceBus.Redis.Test.Gateway
+namespace NServiceBus.Redis.Tests.Gateway
 {
     [Trait("Category","Integration")]
     public class RedisDeduplicationTests
