@@ -3,31 +3,32 @@ using System.Collections.Generic;
 using System.Transactions;
 using NServiceBus.Redis.Extensions;
 using NServiceBus.Redis.Gateway;
-using ServiceStack.Redis;
 using Xunit;
 
 namespace NServiceBus.Redis.Tests.Gateway
 {
     [Trait("Category","Integration")]
+    [Collection("NServiceBusRedisFixture")]
     public class RedisDeduplicationTests
     {
-        private readonly IRedisClientsManager _redisClientsManager;
+        private readonly NServiceBusRedisFixture _fixture;
         private readonly RedisDeduplication _redisDeduplication;
 
-        private readonly string endpointName = "nservicebus4-persistence:gateway:test";
-        public RedisDeduplicationTests()
+        internal static readonly string EndpointName = "nservicebus4-persistence:gateway:test";
+
+        public RedisDeduplicationTests(NServiceBusRedisFixture fixture)
         {
-            _redisClientsManager = ConfigureRedisPersistenceManager.GetRedisClientsManager();
-            _redisDeduplication = new RedisDeduplication(endpointName, _redisClientsManager, 10);
+            _fixture = fixture;
+            _redisDeduplication = new RedisDeduplication(EndpointName, _fixture.RedisClientsManager, 10);
         }
         
         [Fact]
         public void Should_Deduplicate_The_Message()
         {
             var entity = CreateTestGatewayEntity();
-            using (var redisClient = _redisClientsManager.GetClient())
+            using (var redisClient =  _fixture.RedisClientsManager.GetClient())
             {
-                redisClient.As<GatewayEntity>().SetValue(endpointName + entity.Id.EscapeClientId(), entity, TimeSpan.FromMinutes(1));
+                redisClient.As<GatewayEntity>().SetValue(EndpointName + entity.Id.EscapeClientId(), entity, TimeSpan.FromMinutes(1));
             }
             
             bool duplicated = false;
@@ -57,9 +58,9 @@ namespace NServiceBus.Redis.Tests.Gateway
 
             Assert.True(duplicated);
 
-            using (var redisClient = _redisClientsManager.GetClient())
+            using (var redisClient =  _fixture.RedisClientsManager.GetClient())
             {
-                var received = redisClient.As<GatewayEntity>().GetValue(endpointName + entity.Id.EscapeClientId()).TimeReceived;
+                var received = redisClient.As<GatewayEntity>().GetValue(EndpointName + entity.Id.EscapeClientId()).TimeReceived;
                 Assert.Equal(timeReceived, received);
             }
         }

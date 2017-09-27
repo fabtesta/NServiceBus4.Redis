@@ -1,5 +1,7 @@
 ﻿using System;
 using System.Configuration;
+using NServiceBus.Gateway.Deduplication;
+using NServiceBus.Gateway.Persistence;
 using NServiceBus.Logging;
 using NServiceBus.Redis.Gateway;
 using NServiceBus.Redis.Timeout;
@@ -43,6 +45,8 @@ namespace NServiceBus.Redis
         public static Configure UseRedisTimeoutPersister(this Configure config, string endpointName,
             int defaultPollingTimeout = 10)
         {
+            config.ThrowIfRedisNotConfigured();
+
             config.Configurer.RegisterSingleton<IPersistTimeouts>(typeof(RedisTimeoutPersistence))
                 .ConfigureProperty<string>("endpointName", endpointName)
                 .ConfigureProperty<int>("defaultPollingTimeout", defaultPollingTimeout);
@@ -55,19 +59,34 @@ namespace NServiceBus.Redis
         /// <summary>
         /// Use Redis messages persistence by the gateway.
         /// </summary>
-        public static Configure UseRedisGatewayStorage(this Configure config)
+        public static Configure UseRedisGatewayStorage(this Configure config, string endpointName,
+            int defaultEntityTtl = 10)
         {
             config.ThrowIfRedisNotConfigured();
+
+            config.Configurer.RegisterSingleton<IPersistMessages>(typeof(RedisGatewayPersistence))
+                .ConfigureProperty<string>("endpointName", endpointName)
+                .ConfigureProperty<int>("defaultEntityTtl", defaultEntityTtl);
+            Logger.InfoFormat(
+                "ConfigureRedisPersistenceManager UseRedisGatewayStorage endpointName {0} defaultEntityTtl {1}",
+                endpointName, defaultEntityTtl);
             return config.RunGateway(typeof(RedisGatewayPersistence));
         }
 
         /// <summary>
         /// Use Redis for message deduplication by the gateway.
         /// </summary>
-        public static Configure UseRedisGatewayDeduplicationStorage(this Configure config)
+        public static Configure UseRedisGatewayDeduplicationStorage(this Configure config, string endpointName,
+            int defaultEntityTtl = 10)
         {
             config.ThrowIfRedisNotConfigured();
-            config.Configurer.ConfigureComponent<RedisDeduplication>(DependencyLifecycle.SingleInstance);
+
+            config.Configurer.RegisterSingleton<IDeduplicateMessages>(typeof(RedisDeduplication))
+                .ConfigureProperty<string>("endpointName", endpointName)
+                .ConfigureProperty<int>("defaultEntityTtl", defaultEntityTtl);
+            Logger.InfoFormat(
+                "ConfigureRedisPersistenceManager UseRedisGatewayDeduplicationStorage endpointName {0} defaultEntityTtl {1}",
+                endpointName, defaultEntityTtl);            
             return config;
         }
 
