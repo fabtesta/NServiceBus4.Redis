@@ -24,12 +24,12 @@ namespace NServiceBus.Redis.AcceptanceTests.EndpointTemplates
 
             var config = Configure.With(types)
                             .DefineEndpointName(endpointConfiguration.EndpointName)
-                            .CustomConfigurationSource(configSource)
+                            //.CustomConfigurationSource(configSource)
                             .RedisStorage()
                             .UseTransport<RabbitMQ>()
-                            .UseRedisGatewayStorage(endpointConfiguration.EndpointName)
                             .UseRedisGatewayDeduplicationStorage(endpointConfiguration.EndpointName)
-                            .UseRedisTimeoutPersister(endpointConfiguration.EndpointName);            
+                            .UseRedisTimeoutPersister(endpointConfiguration.EndpointName)
+                            .RunGateway().UseRedisGatewayStorage(endpointConfiguration.EndpointName);
             return config.UnicastBus();
         }
 

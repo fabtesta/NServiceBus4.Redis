@@ -101,11 +101,11 @@ namespace NServiceBus.Redis
             if (clusterName == null)
                 throw new Exception("Missing NServiceBus/Redis/RedisClusterName appSettings key (leave it empty for single node connection pool).");
 
-            var redisConnectionString = ConfigurationManager.AppSettings["NServiceBus/Redis/RedisConnectionString"]
-                .Replace(";", "&");
+            var redisConnectionString = ConfigurationManager.AppSettings["NServiceBus/Redis/RedisConnectionString"];
             if (redisConnectionString == null)
                 throw new Exception("Missing NServiceBus/Redis/RedisConnectionString appSettings key.");
 
+            redisConnectionString = redisConnectionString.Replace(";", "&");
             var redisManager = InitRedisClientManager(clusterName, clusterNodes, redisConnectionString);
 
             var serviceStackLicense = ConfigurationManager.AppSettings["servicestack:license"] != null

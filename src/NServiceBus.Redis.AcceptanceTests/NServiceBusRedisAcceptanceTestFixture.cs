@@ -3,21 +3,19 @@ using NServiceBus.AcceptanceTesting.Customization;
 
 namespace NServiceBus.Redis.AcceptanceTests
 {
-    public class NServiceBusAcceptanceTest : IDisposable
+    public class NServiceBusRedisAcceptanceTestFixture : IDisposable
     {
         
-        public NServiceBusAcceptanceTest()
+        public NServiceBusRedisAcceptanceTestFixture()
         {
             ////TEAR UP
             Conventions.EndpointNamingConvention = t =>
             {
-                var baseNs = typeof(NServiceBusAcceptanceTest).Namespace;
+                var baseNs = typeof(NServiceBusRedisAcceptanceTestFixture).Namespace;
                 var testName = GetType().Name;
                 return t.FullName.Replace(baseNs + ".", "").Replace(testName + "+", "")
                        + "." + System.Threading.Thread.CurrentThread.CurrentCulture.TextInfo.ToTitleCase(testName).Replace("_", "");
-            };
-
-            Conventions.DefaultRunDescriptor = () => ScenarioDescriptors.Transports.Default;
+            };            
         }
 
         public void Dispose()
