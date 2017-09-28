@@ -81,7 +81,7 @@ namespace NServiceBus.Redis
             config.Configurer.ConfigureComponent<RedisDeduplication>(DependencyLifecycle.SingleInstance)
                 .ConfigureProperty(p => p.EndpointName, endpointName)
                 .ConfigureProperty(p => p.DefaultEntityTtl, defaultEntityTtl);            
-            config.RunGateway();
+            config.RunGateway(typeof(RedisGatewayPersistence));
             Logger.InfoFormat(
                 "ConfigureRedisPersistenceManager UseRedisGatewayDeduplicationStorage endpointName {0} defaultEntityTtl {1}",
                 endpointName, defaultEntityTtl);
