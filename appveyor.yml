@@ -4,7 +4,7 @@ before_build:
 - cmd: choco install redis-64
 - cmd: redis-server --service-install
 - cmd: redis-server --service-start
-- cmd: choco install rabbitmq
+#- cmd: choco install rabbitmq
 - cmd: nuget restore src\NServiceBus.Redis.sln
 build:
   project: src\NServiceBus.Redis.sln
