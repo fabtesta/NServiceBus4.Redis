@@ -1,17 +1,10 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
+﻿using System.Collections.Generic;
 
 namespace NServiceBus.Redis.Gateway
 {
-    internal class GatewayEntity
+    internal class GatewayMessage : NServiceBus.Gateway.Deduplication.GatewayMessage
     {
         public IDictionary<string, string> Headers { get; set; }
-
-        public DateTime TimeReceived { get; set; }
-
-        public string Id { get; set; }
 
         public byte[] OriginalMessage { get; set; }
 

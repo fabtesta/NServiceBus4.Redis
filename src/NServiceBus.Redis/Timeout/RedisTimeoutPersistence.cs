@@ -56,7 +56,7 @@ namespace NServiceBus.Redis.Timeout
                     {
                         nextTimeToRunQuery = endSlice.AddMinutes(DefaultPollingTimeout);
                     }
-                    Logger.DebugFormat("GetNextChunk timeoutRange {0} nextTimeoutRange {1} nextTimeToRunQuery {2}", timeoutRange.Count,  nextTimeoutRange.Count, nextTimeToRunQuery);
+                    Logger.InfoFormat("GetNextChunk timeoutRange {0} nextTimeoutRange {1} nextTimeToRunQuery {2}", timeoutRange.Count,  nextTimeoutRange.Count, nextTimeToRunQuery);
                     return timeoutRange;
                 }
             }
@@ -89,7 +89,7 @@ namespace NServiceBus.Redis.Timeout
                 using (var redisClient = RedisClientsManager.GetClient())
                 {
                     redisClient.As<TimeoutEntity>().AddItemToSortedSet(redisClient.As<TimeoutEntity>().SortedSets[EndpointName], timeoutEntity, timeoutEntity.Time.ToUnixTimeSeconds());              
-                    Logger.DebugFormat("Added timeoutEntity {0} with score {1} to sorted set {2}", timeoutEntity.Id, timeoutEntity.Time.ToUnixTimeSeconds(), redisClient.As<TimeoutEntity>().SortedSets[EndpointName].ToUrn());            
+                    Logger.InfoFormat("Added timeoutEntity {0} with score {1} to sorted set {2}", timeoutEntity.Id, timeoutEntity.Time.ToUnixTimeSeconds(), redisClient.As<TimeoutEntity>().SortedSets[EndpointName].ToUrn());            
                 }
             }
             catch (Exception e)
@@ -124,7 +124,7 @@ namespace NServiceBus.Redis.Timeout
                         };
                     }
                 
-                    Logger.DebugFormat("TryRemove timeoutData {0} from sorted set {1}. Found? {2}", timeoutId, redisClient.As<TimeoutEntity>().SortedSets[EndpointName].ToUrn(), timeoutData != default(TimeoutData));
+                    Logger.InfoFormat("TryRemove timeoutData {0} from sorted set {1}. Found? {2}", timeoutId, redisClient.As<TimeoutEntity>().SortedSets[EndpointName].ToUrn(), timeoutData != default(TimeoutData));
                 }
             
                 return timeoutData != default(TimeoutData);
@@ -144,7 +144,7 @@ namespace NServiceBus.Redis.Timeout
                 {
                     var timeoutEntity = redisClient.As<TimeoutEntity>().SortedSets[EndpointName].GetAll().FirstOrDefault(x => x.SagaId == sagaId);                                
                     redisClient.As<TimeoutEntity>().SortedSets[EndpointName].Remove(timeoutEntity);
-                    Logger.DebugFormat("RemoveTimeoutBy sagaId {0} from sorted set {1}. Found? {2}", sagaId, redisClient.As<TimeoutEntity>().SortedSets[EndpointName].ToUrn(), timeoutEntity != null);
+                    Logger.InfoFormat("RemoveTimeoutBy sagaId {0} from sorted set {1}. Found? {2}", sagaId, redisClient.As<TimeoutEntity>().SortedSets[EndpointName].ToUrn(), timeoutEntity != null);
                 }
             }
             catch (Exception e)

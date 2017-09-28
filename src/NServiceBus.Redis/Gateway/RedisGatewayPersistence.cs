@@ -40,7 +40,7 @@ namespace NServiceBus.Redis.Gateway
         {
             try
             {
-                var gatewayEntity = new GatewayEntity
+                var gatewayMessage = new GatewayMessage
                 {
                     Id = clientId.EscapeClientId(),
                     TimeReceived = timeReceived,
@@ -49,11 +49,11 @@ namespace NServiceBus.Redis.Gateway
                     Acknowledged = false
                 };
 
-                messageStream.Read(gatewayEntity.OriginalMessage, 0, (int)messageStream.Length);
+                messageStream.Read(gatewayMessage.OriginalMessage, 0, (int)messageStream.Length);
                 using (var redisClient = RedisClientsManager.GetClient())
                 {
-                    redisClient.As<GatewayEntity>().SetValue(EndpointName + gatewayEntity.Id, gatewayEntity, TimeSpan.FromMinutes(DefaultEntityTtl));
-                    Logger.DebugFormat("Added gatewayEntity {0} with ttl {1}", gatewayEntity.Id, DefaultEntityTtl);
+                    redisClient.As<GatewayMessage>().SetValue(EndpointName + gatewayMessage.Id, gatewayMessage, TimeSpan.FromMinutes(DefaultEntityTtl));
+                    Logger.InfoFormat("Added gatewayMessage {0} with ttl {1}", gatewayMessage.Id, DefaultEntityTtl);
                 }
                 return true;
             }
@@ -73,20 +73,20 @@ namespace NServiceBus.Redis.Gateway
 
                 using (var redisClient = RedisClientsManager.GetClient())
                 {
-                    var gatewayEntity = redisClient.As<GatewayEntity>().GetValue(EndpointName + clientId.EscapeClientId());
+                    var gatewayMessage = redisClient.As<GatewayMessage>().GetValue(EndpointName + clientId.EscapeClientId());
 
-                    if (gatewayEntity == null)
+                    if (gatewayMessage == null)
                         throw new InvalidOperationException("No message with id: " + clientId + "found");
-                    if (gatewayEntity.Acknowledged)
+                    if (gatewayMessage.Acknowledged)
                         return false;
 
-                    message = gatewayEntity.OriginalMessage;
-                    headers = gatewayEntity.Headers;
+                    message = gatewayMessage.OriginalMessage;
+                    headers = gatewayMessage.Headers;
 
-                    gatewayEntity.Acknowledged = true;
-                    redisClient.As<GatewayEntity>().SetValue(EndpointName + gatewayEntity.Id.EscapeClientId(), gatewayEntity, TimeSpan.FromMinutes(DefaultEntityTtl));
+                    gatewayMessage.Acknowledged = true;
+                    redisClient.As<GatewayMessage>().SetValue(EndpointName + gatewayMessage.Id.EscapeClientId(), gatewayMessage, TimeSpan.FromMinutes(DefaultEntityTtl));
 
-                    Logger.DebugFormat("Acked gatewayEntity {0}", gatewayEntity.Id);
+                    Logger.InfoFormat("Acked gatewayMessage {0}", gatewayMessage.Id);
 
                     return true;
                 }
@@ -104,14 +104,14 @@ namespace NServiceBus.Redis.Gateway
             {
                 using (var redisClient = RedisClientsManager.GetClient())
                 {
-                    var gatewayEntity = redisClient.As<GatewayEntity>().GetValue(EndpointName + clientId.EscapeClientId());
+                    var gatewayMessage = redisClient.As<GatewayMessage>().GetValue(EndpointName + clientId.EscapeClientId());
 
-                    if (gatewayEntity == null)
+                    if (gatewayMessage == null)
                         throw new InvalidOperationException("No message with id: " + clientId + "found");
-                    gatewayEntity.Headers[headerKey] = newValue;
-                    redisClient.As<GatewayEntity>().SetValue(EndpointName + gatewayEntity.Id.EscapeClientId(), gatewayEntity, TimeSpan.FromMinutes(DefaultEntityTtl));
+                    gatewayMessage.Headers[headerKey] = newValue;
+                    redisClient.As<GatewayMessage>().SetValue(EndpointName + gatewayMessage.Id.EscapeClientId(), gatewayMessage, TimeSpan.FromMinutes(DefaultEntityTtl));
 
-                    Logger.DebugFormat("UpdatedHeader gatewayEntity {0}", gatewayEntity.Id);                
+                    Logger.InfoFormat("UpdatedHeader gatewayMessage {0}", gatewayMessage.Id);                
                 }
             }
             catch (Exception e)

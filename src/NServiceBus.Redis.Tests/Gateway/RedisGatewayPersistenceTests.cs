@@ -33,7 +33,7 @@ namespace NServiceBus.Redis.Tests.Gateway
                 using (var msgStream = new MemoryStream(entity.OriginalMessage))
                 {
                     _redisGatewayPersistence.InsertMessage(entity.Id, entity.TimeReceived, msgStream, entity.Headers);
-                    Assert.Equal(entity.Id.EscapeClientId(), redisClient.As<GatewayEntity>().GetValue(EndpointName + entity.Id.EscapeClientId()).Id);
+                    Assert.Equal(entity.Id.EscapeClientId(), redisClient.As<GatewayMessage>().GetValue(EndpointName + entity.Id.EscapeClientId()).Id);
                 }
             }
         }
@@ -44,7 +44,7 @@ namespace NServiceBus.Redis.Tests.Gateway
             var entity = CreateTestGatewayEntity();
             using (var redisClient =  _fixture.RedisClientsManager.GetClient())
             {
-               redisClient.As<GatewayEntity>().SetValue(EndpointName + entity.Id.EscapeClientId(), entity, TimeSpan.FromMinutes(1));
+               redisClient.As<GatewayMessage>().SetValue(EndpointName + entity.Id.EscapeClientId(), entity, TimeSpan.FromMinutes(1));
             }
             
             byte[] msg;
@@ -61,7 +61,7 @@ namespace NServiceBus.Redis.Tests.Gateway
             var entity = CreateTestGatewayEntity();
             using (var redisClient =  _fixture.RedisClientsManager.GetClient())
             {
-                redisClient.As<GatewayEntity>().SetValue(EndpointName + entity.Id.EscapeClientId(), entity, TimeSpan.FromMinutes(1));
+                redisClient.As<GatewayMessage>().SetValue(EndpointName + entity.Id.EscapeClientId(), entity, TimeSpan.FromMinutes(1));
             }
 
             byte[] msg;
@@ -84,7 +84,7 @@ namespace NServiceBus.Redis.Tests.Gateway
             var entity = CreateTestGatewayEntity();
             using (var redisClient =  _fixture.RedisClientsManager.GetClient())
             {
-                redisClient.As<GatewayEntity>().SetValue(EndpointName + entity.Id.EscapeClientId(), entity, TimeSpan.FromMinutes(1));
+                redisClient.As<GatewayMessage>().SetValue(EndpointName + entity.Id.EscapeClientId(), entity, TimeSpan.FromMinutes(1));
             }
 
             byte[] msg;
@@ -95,7 +95,7 @@ namespace NServiceBus.Redis.Tests.Gateway
 
             using (var redisClient =  _fixture.RedisClientsManager.GetClient())
             {
-                Assert.True(redisClient.As<GatewayEntity>().GetValue(EndpointName + entity.Id.EscapeClientId()).Acknowledged);
+                Assert.True(redisClient.As<GatewayMessage>().GetValue(EndpointName + entity.Id.EscapeClientId()).Acknowledged);
             }            
         }
 
@@ -105,7 +105,7 @@ namespace NServiceBus.Redis.Tests.Gateway
             var entity = CreateTestGatewayEntity();
             using (var redisClient =  _fixture.RedisClientsManager.GetClient())
             {
-                redisClient.As<GatewayEntity>().SetValue(EndpointName + entity.Id.EscapeClientId(), entity, TimeSpan.FromMinutes(1));
+                redisClient.As<GatewayMessage>().SetValue(EndpointName + entity.Id.EscapeClientId(), entity, TimeSpan.FromMinutes(1));
             }
 
             var headerToUpdate = entity.Headers.First();
@@ -114,11 +114,11 @@ namespace NServiceBus.Redis.Tests.Gateway
 
             using (var redisClient =  _fixture.RedisClientsManager.GetClient())
             {
-                Assert.Equal("Updated value", redisClient.As<GatewayEntity>().GetValue(EndpointName + entity.Id.EscapeClientId()).Headers[headerToUpdate.Key]);
+                Assert.Equal("Updated value", redisClient.As<GatewayMessage>().GetValue(EndpointName + entity.Id.EscapeClientId()).Headers[headerToUpdate.Key]);
             }            
         }
         
-        GatewayEntity CreateTestGatewayEntity()
+        GatewayMessage CreateTestGatewayEntity()
         {
             var headers = new Dictionary<string, string>
             {
@@ -127,7 +127,7 @@ namespace NServiceBus.Redis.Tests.Gateway
                 {"Header3", "Value3"}
             };
             
-            return new GatewayEntity
+            return new GatewayMessage
             {
                 Id = Guid.NewGuid() + "\\12345",
                 TimeReceived = DateTime.UtcNow,

@@ -61,7 +61,7 @@
     <Compile Include="ConfigureRedisPersistenceManager.cs" />
     <Compile Include="Extensions\DateTimeExtensions.cs" />
     <Compile Include="Extensions\StringExtensions.cs" />
-    <Compile Include="Gateway\GatewayEntity.cs" />
+    <Compile Include="Gateway\GatewayMessage.cs" />
     <Compile Include="Gateway\RedisDeduplication.cs" />
     <Compile Include="Gateway\RedisGatewayPersistence.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />

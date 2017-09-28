@@ -28,7 +28,7 @@ namespace NServiceBus.Redis.Tests.Gateway
             var entity = CreateTestGatewayEntity();
             using (var redisClient =  _fixture.RedisClientsManager.GetClient())
             {
-                redisClient.As<GatewayEntity>().SetValue(EndpointName + entity.Id.EscapeClientId(), entity, TimeSpan.FromMinutes(1));
+                redisClient.As<GatewayMessage>().SetValue(EndpointName + entity.Id.EscapeClientId(), entity, TimeSpan.FromMinutes(1));
             }
             
             bool duplicated = false;
@@ -60,12 +60,12 @@ namespace NServiceBus.Redis.Tests.Gateway
 
             using (var redisClient =  _fixture.RedisClientsManager.GetClient())
             {
-                var received = redisClient.As<GatewayEntity>().GetValue(EndpointName + entity.Id.EscapeClientId()).TimeReceived;
+                var received = redisClient.As<GatewayMessage>().GetValue(EndpointName + entity.Id.EscapeClientId()).TimeReceived;
                 Assert.Equal(timeReceived, received);
             }
         }
 
-        GatewayEntity CreateTestGatewayEntity()
+        GatewayMessage CreateTestGatewayEntity()
         {
             var headers = new Dictionary<string, string>
             {
@@ -74,7 +74,7 @@ namespace NServiceBus.Redis.Tests.Gateway
                 {"Header3", "Value3"}
             };
             
-            return new GatewayEntity
+            return new GatewayMessage
             {
                 Id = Guid.NewGuid() + "\\67890",
                 TimeReceived = DateTime.UtcNow,

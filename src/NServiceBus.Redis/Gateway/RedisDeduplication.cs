@@ -40,21 +40,22 @@ namespace NServiceBus.Redis.Gateway
             {
                 using (var redisClient = RedisClientsManager.GetClient())
                 {
-                    var gatewayEntity = redisClient.As<GatewayEntity>().GetValue(EndpointName + clientId);
+                    var gatewayMessage = redisClient.As<GatewayMessage>().GetValue(EndpointName + clientId);
 
-                    if (gatewayEntity != null)
-                    {                    
+                    if (gatewayMessage != null)
+                    {
+                        Logger.InfoFormat("DeduplicatedMessage found gatewayMessage {0}", gatewayMessage.Id);
                         return false;
                     }
 
-                    gatewayEntity = new GatewayEntity
+                    gatewayMessage = new GatewayMessage
                     {
                         Id = clientId.EscapeClientId(),
                         TimeReceived = timeReceived
                     };            
                 
-                    redisClient.As<GatewayEntity>().SetValue(EndpointName + gatewayEntity.Id, gatewayEntity, TimeSpan.FromMinutes(DefaultEntityTtl));
-                    Logger.DebugFormat("DeduplicatedMessage gatewayEntity {0} with ttl {1}", gatewayEntity.Id, DefaultEntityTtl);
+                    redisClient.As<GatewayMessage>().SetValue(EndpointName + gatewayMessage.Id, gatewayMessage, TimeSpan.FromMinutes(DefaultEntityTtl));
+                    Logger.InfoFormat("DeduplicatedMessage added gatewayMessage {0} with ttl {1}", gatewayMessage.Id, DefaultEntityTtl);
                 }
                 return true;
             }
