@@ -1,4 +1,4 @@
-# NServiceBus4.Redis [![Build status](https://ci.appveyor.com/api/projects/status/i2b2phpdhk6boq5q?svg=true)](https://ci.appveyor.com/project/fabtesta/nservicebus4-redis) [![NuGet Status](http://img.shields.io/nuget/v/NServiceBus.Redis.svg)](https://www.nuget.org/packages/NServiceBus.Redis/)
+# NServiceBus4.Redis [![Build status](https://ci.appveyor.com/api/projects/status/i2b2phpdhk6boq5q?svg=true)](https://ci.appveyor.com/project/fabtesta/nservicebus4-redis) [![NuGet Status](https://img.shields.io/nuget/v/NServiceBus.Redis.svg)](https://www.nuget.org/packages/NServiceBus.Redis/)
 
 Redis Persistence for NServiceBus 4.4.x.  
 Version 1.x supports only TimeoutManager (IPersistTimeouts).  
