@@ -3,14 +3,14 @@
 Redis Persistence for NServiceBus 4.4.x.  
 Version 1.x supports only TimeoutManager (IPersistTimeouts).  
 
-Redis connection is based on [`ServiceStack.Redis`](https://github.com/ServiceStack/ServiceStack.Redis) library latest .NET 4.0 [`version`](https://github.com/ServiceStack/ServiceStack.Redis/tree/v4.0.54).
+Redis connection is based on [`ServiceStack.Redis`](https://github.com/ServiceStack/ServiceStack.Redis) library latest .NET 4.5 [`version`](https://github.com/ServiceStack/ServiceStack.Redis/tree/v5.1.0).
 
 ### Installation
 * Get the source and build locally  
 or  
 * Install the [`NServiceBus.Redis`](https://www.nuget.org/packages/NServiceBus.Redis/) NuGet package using the Visual Studio NuGet Package Manager or Package Manager
 ```powershell
-Install-Package NServiceBus.Redis -Version 1.0.1
+Install-Package NServiceBus.Redis -Version 1.1.0
 ```
 
 ### Configuration
